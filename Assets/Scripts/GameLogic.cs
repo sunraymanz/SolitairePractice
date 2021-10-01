@@ -9,8 +9,10 @@ public class GameLogic : MonoBehaviour
     public Sprite[] cardFaces;
     public GameObject[] topPos;
     public GameObject[] bottomPos;
+    public GameObject deckPos;
     public List<string>[] tops ;
     public List<string>[] bottoms ;
+
     public List<string> bottom0 = new List<string>() ;
     public List<string> bottom1 = new List<string>() ;
     public List<string> bottom2 = new List<string>() ;
@@ -22,6 +24,13 @@ public class GameLogic : MonoBehaviour
     public static string[] suits = new string[]{"C","D","H","S" };
     public static string[] numbers = new string[]{"A","2","3","4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
     public List<string> deck ;
+    public List<string> tripsOnDisplay = new List<string>() ;
+    public List<List<string>> deckTrips = new List<List<string>>();
+    public List<string> discardPile = new List<string>();
+    int trips;
+    int tripsRemainder;
+    int deckLocation;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -45,6 +54,7 @@ public class GameLogic : MonoBehaviour
         }
         SortCard();
         StartCoroutine(SpawnCard());
+        SortDeckIntoTrips();
     }
 
     public static List<string> GenerateDeck()
@@ -86,15 +96,24 @@ public class GameLogic : MonoBehaviour
                 yield return new WaitForSeconds(0.03f);
                 GameObject newCard = Instantiate(cardPrefab, new Vector3(bottomPos[i].transform.position.x, bottomPos[i].transform.position.y - yOffset, bottomPos[i].transform.position.z - zOffset), Quaternion.identity, bottomPos[i].transform);
                 newCard.name = card;
+                newCard.GetComponent<SelectableSprite>().row = i;
                 if (card == bottoms[i][bottoms[i].Count-1])
                 {
                     newCard.GetComponent<SelectableSprite>().isFaceUp = true;
                 }
-                else { newCard.GetComponent<SelectableSprite>().isFaceUp = false; }
                 yOffset += 0.3f;
                 zOffset += 0.03f;
+                discardPile.Add(card);
             }
         }
+        foreach (string card in discardPile)
+        {
+            if (deck.Contains(card))
+            {
+                deck.Remove(card);
+            }
+        }
+        discardPile.Clear();
     }
 
     void SortCard()
@@ -107,5 +126,79 @@ public class GameLogic : MonoBehaviour
                 deck.RemoveAt(deck.Count - 1);
             }
         }
+    }
+
+    void SortDeckIntoTrips()
+    {
+        trips = deck.Count / 3;
+        tripsRemainder = deck.Count % 3;
+        deckTrips.Clear();
+        int modifiers = 0;
+        for (int i = 0; i < trips; i++)
+        {
+            List<string> myTrips = new List<string>();
+            for (int j = 0; j < 3; j++)
+            {
+                myTrips.Add(deck[j+modifiers]);
+            }
+            deckTrips.Add(myTrips);
+            modifiers += 3;
+        }
+        if (tripsRemainder != 0)
+        {
+            List<string> myRemainder = new List<string>();
+            for (int k = 0; k < tripsRemainder; k++)
+            {
+                myRemainder.Add(deck[deck.Count-tripsRemainder+modifiers]);
+                modifiers++;
+            }
+            deckTrips.Add(myRemainder);
+            trips++;
+        }
+        deckLocation = 0;
+    }
+
+    public void DealFromDeck()
+    {
+        foreach (Transform child in deckPos.transform)
+        {
+            if (child.CompareTag("Card"))
+            {
+                deck.Remove(child.name);
+                discardPile.Add(child.name);
+                Destroy(child.gameObject);
+            }
+        }
+        if (deckLocation < trips)
+        {
+            tripsOnDisplay.Clear();
+            float xOffset = 2.5f;
+            float zOffset = -0.2f;
+            foreach (string card in deckTrips[deckLocation])
+            {
+                GameObject newCard = Instantiate(cardPrefab, new Vector3(deckPos.transform.position.x+xOffset, deckPos.transform.position.y, deckPos.transform.position.z + zOffset), Quaternion.identity,deckPos.transform);
+                newCard.name = card;
+                xOffset += 0.5f;
+                zOffset -= 0.2f;
+                tripsOnDisplay.Add(card);
+                newCard.GetComponent<SelectableSprite>().isFaceUp = true;
+                newCard.GetComponent<SelectableSprite>().inDeckPile = true;
+            }
+            deckLocation++;
+        }
+        else
+        {
+            RestackTopDeck();
+        }
+    }
+
+    void RestackTopDeck() 
+    {
+        foreach (string card in discardPile)
+        {
+            deck.Add(card);
+        }
+        discardPile.Clear();
+        SortDeckIntoTrips();
     }
 }

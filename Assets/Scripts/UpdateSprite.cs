@@ -9,11 +9,14 @@ public class UpdateSprite : MonoBehaviour
     private SpriteRenderer sprToken;
     private SelectableSprite selectableToken;
     private GameLogic logicToken;
+    private UserInput inputToken;
     // Start is called before the first frame update
     void Start()
     {
         List<string> deck = GameLogic.GenerateDeck();
         logicToken = FindObjectOfType<GameLogic>();
+        inputToken = FindObjectOfType<UserInput>();
+
         int i = 0;
         foreach (string card in deck)
         {
@@ -37,5 +40,14 @@ public class UpdateSprite : MonoBehaviour
             sprToken.sprite = cardFace;
         }
         else { sprToken.sprite = cardBack; }
+
+        if (inputToken.slot1)
+        {
+            if (name == inputToken.slot1.name)
+            {
+                sprToken.color = Color.yellow;
+            }
+            else { sprToken.color = Color.white; }
+        }
     }
 }
