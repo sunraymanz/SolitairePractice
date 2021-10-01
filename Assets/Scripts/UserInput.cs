@@ -111,7 +111,7 @@ public class UserInput : MonoBehaviour
                 {
                     card1Red = false;
                 }
-                if (s1.suit == "C" || s1.suit == "S")
+                if (s2.suit == "C" || s2.suit == "S")
                 {
                     card2Red = false;
                 }
