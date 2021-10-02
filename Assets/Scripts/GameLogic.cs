@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System.Linq;
 
 public class GameLogic : MonoBehaviour
 {
@@ -44,13 +44,21 @@ public class GameLogic : MonoBehaviour
         
     }
 
-    void InitCard()
+
+
+
+
+    public void InitCard()
     {
+        foreach (List<string> list in bottoms)
+        {
+            list.Clear();
+        }
         deck = GenerateDeck();
         Shuffle(deck);
         foreach (string card in deck)
         {
-            print(card);
+            //print(card);
         }
         SortCard();
         StartCoroutine(SpawnCard());
@@ -98,6 +106,7 @@ public class GameLogic : MonoBehaviour
                 newCard.name = card;
                 newCard.GetComponent<SelectableSprite>().row = i;
                 if (card == bottoms[i][bottoms[i].Count-1])
+                //if (card == bottoms[i].Last())
                 {
                     newCard.GetComponent<SelectableSprite>().isFaceUp = true;
                 }
@@ -128,11 +137,18 @@ public class GameLogic : MonoBehaviour
         }
     }
 
+
+
+
+
+
+
     void SortDeckIntoTrips()
     {
         trips = deck.Count / 3;
         tripsRemainder = deck.Count % 3;
         deckTrips.Clear();
+
         int modifiers = 0;
         for (int i = 0; i < trips; i++)
         {
@@ -147,6 +163,7 @@ public class GameLogic : MonoBehaviour
         if (tripsRemainder != 0)
         {
             List<string> myRemainder = new List<string>();
+            modifiers = 0;
             for (int k = 0; k < tripsRemainder; k++)
             {
                 myRemainder.Add(deck[deck.Count-tripsRemainder+modifiers]);
@@ -160,6 +177,7 @@ public class GameLogic : MonoBehaviour
 
     public void DealFromDeck()
     {
+        //Add remaining cards to discard pile
         foreach (Transform child in deckPos.transform)
         {
             if (child.CompareTag("Card"))
@@ -171,6 +189,7 @@ public class GameLogic : MonoBehaviour
         }
         if (deckLocation < trips)
         {
+            //Draw 3 new cards
             tripsOnDisplay.Clear();
             float xOffset = 2.5f;
             float zOffset = -0.2f;
@@ -194,6 +213,7 @@ public class GameLogic : MonoBehaviour
 
     void RestackTopDeck() 
     {
+        deck.Clear();
         foreach (string card in discardPile)
         {
             deck.Add(card);
